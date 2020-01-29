@@ -38,8 +38,9 @@ workflows:
   version: 2
   test-build-publish:
     jobs:
-      - test:
+      - test
       - build:
+          context: "Docker Build"
           filters:
             branches:
               only: release
