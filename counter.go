@@ -6,6 +6,7 @@ import (
 	"image/jpeg"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/fogleman/gg"
@@ -29,6 +30,11 @@ func drawImage(w http.ResponseWriter, img *image.Image) {
 
 func countHandler(w http.ResponseWriter, r *http.Request) {
 	domain := chi.URLParam(r, "domain")
+	fontPath := os.Getenv("COUNTER_FONT_PATH")
+
+	if fontPath == "" {
+		fontPath = "./"
+	}
 
 	counters[domain]++
 
@@ -39,7 +45,7 @@ func countHandler(w http.ResponseWriter, r *http.Request) {
 	dc.Fill()
 	dc.Clear()
 	dc.SetRGB(1, 1, 1)
-	if err := dc.LoadFontFace("Berylium.ttf", 32); err != nil {
+	if err := dc.LoadFontFace(fontPath + "Berylium.ttf", 32); err != nil {
 		panic(err)
 	}
 	dc.DrawStringAnchored(count, 200/2, 50/2, 0.5, 0.5)
