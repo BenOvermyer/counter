@@ -1,0 +1,45 @@
+# Golang CircleCI 2.0 configuration file
+#
+# World API Project
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/go:1.13
+    steps:
+      - checkout
+      - run:
+          name: Fetch dependencies
+          command: go get -v -t -d ./...
+      - run:
+          name: Run tests
+          command: |
+            go test -short -coverprofile c.out ./...
+  build:
+    docker:
+      - image: cimg/go:1.13
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: go get -v -t -d ./...
+      - run: |
+          VERSION_TAG=`cat VERSION`
+          GIT_TAG=`git log -1 --pretty=%h`
+          docker build -t benovermyer/counter:$VERSION_TAG -t benovermyer/counter:$GIT_TAG -t benovermyer/counter:latest .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push benovermyer/counter:$VERSION_TAG
+          docker push benovermyer/counter:$GIT_TAG
+          docker push benovermyer/counter:latest
+
+workflows:
+  version: 2
+  test-build-publish:
+    jobs:
+      - test:
+      - build:
+          filters:
+            branches:
+              only: release
