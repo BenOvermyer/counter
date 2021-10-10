@@ -2,63 +2,131 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"image"
 	"image/jpeg"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/fogleman/gg"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/go-chi/chi"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var counters = map[string]int{}
+type Config struct {
+	backgroundColor string
+	fontColor       string
+	fontPath        string
+	fontSize        float64
+	imageWidth      float64
+	imageHeight     float64
+	logLevel        string
+}
+
+var config Config
+var db *sql.DB
 
 func drawImage(w http.ResponseWriter, img *image.Image) {
 	buffer := new(bytes.Buffer)
 	if err := jpeg.Encode(buffer, *img, nil); err != nil {
-		log.Println("unable to encode image.")
+		log.Error("failed to encode image", err)
 	}
 
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
 	if _, err := w.Write(buffer.Bytes()); err != nil {
-		log.Println("unable to write image.")
+		log.Error("failed to write image", err)
 	}
 }
 
-func countHandler(w http.ResponseWriter, r *http.Request) {
-	domain := chi.URLParam(r, "domain")
-	fontPath := os.Getenv("COUNTER_FONT_PATH")
+func initialize() {
+	backgroundColor := os.Getenv("COUNTER_BG_COLOR")
+	if backgroundColor == "" {
+		backgroundColor = "#000000"
+	}
 
+	fontColor := os.Getenv("COUNTER_FONT_COLOR")
+	if fontColor == "" {
+		fontColor = "#FFFFFF"
+	}
+
+	fontPath := os.Getenv("COUNTER_FONT_DIR")
 	if fontPath == "" {
 		fontPath = "./"
 	}
 
-	counters[domain]++
-
-	count := strconv.Itoa(counters[domain])
-
-	dc := gg.NewContext(200, 50)
-	dc.SetRGB(0, 0, 0)
-	dc.Fill()
-	dc.Clear()
-	dc.SetRGB(1, 1, 1)
-	if err := dc.LoadFontFace(fontPath + "Berylium.ttf", 32); err != nil {
-		panic(err)
+	fontFace := os.Getenv("COUNTER_FONT_FILE")
+	if fontFace == "" {
+		fontFace = "Berylium.ttf"
 	}
-	dc.DrawStringAnchored(count, 200/2, 50/2, 0.5, 0.5)
-	img := dc.Image()
-	drawImage(w, &img)
+
+	fontPath += fontFace
+
+	imageWidth, err := strconv.Atoi(os.Getenv("COUNTER_IMAGE_WIDTH"))
+	if err != nil || imageWidth == 0 {
+		imageWidth = 200
+	}
+
+	imageHeight, err := strconv.Atoi(os.Getenv("COUNTER_IMAGE_HEIGHT"))
+	if err != nil || imageHeight == 0 {
+		imageHeight = 50
+	}
+
+	fontSize, err := strconv.Atoi(os.Getenv("COUNTER_FONT_SIZE"))
+	if err != nil || fontSize == 0 {
+		fontSize = 32
+	}
+
+	logLevel := os.Getenv("COUNTER_LOG_LEVEL")
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
+	config = Config{
+		backgroundColor: backgroundColor,
+		fontColor:       fontColor,
+		fontPath:        fontPath,
+		fontSize:        float64(fontSize),
+		imageWidth:      float64(imageWidth),
+		imageHeight:     float64(imageHeight),
+		logLevel:        logLevel,
+	}
 }
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.Info("initializing...")
+	initialize()
+	if config.logLevel == "debug" {
+		log.SetLevel(log.DebugLevel)
+	}
+
+	if _, err := os.Stat("counter.sqlite"); os.IsNotExist(err) {
+		err = createDB()
+		if err != nil {
+			log.Fatal("failed to create database", err)
+		}
+	} else {
+		err = connectDB()
+		if err != nil {
+			log.Fatal("failed to connect to database", err)
+		}
+	}
+	defer db.Close()
+
+	log.Debug("loading handlers...")
+
 	r := chi.NewRouter()
-	r.Get("/{domain}/counter.jpg", countHandler)
-	log.Println("listening on port 9776")
+
+	r.Get("/", handleHome)
+	r.Get("/count", handleGetCountText)
+	r.Get("/count/counter.jpg", handleCountImage)
+
+	log.Info("listening on port 9776")
 	err := http.ListenAndServe(":9776", r)
 	if err != nil {
-		log.Fatal("ListenAndServe:", err)
+		log.Fatal("failed to listen:", err)
 	}
 }

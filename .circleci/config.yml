@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/go:1.13
+      - image: cimg/go:1.17.1
     steps:
       - checkout
       - run:
@@ -14,7 +14,7 @@ jobs:
             go test -short -coverprofile c.out ./...
   build:
     docker:
-      - image: cimg/go:1.13
+      - image: cimg/go:1.17.1
     steps:
       - checkout
       - setup_remote_docker
