@@ -3,7 +3,7 @@
 This is a simple web counter written in Go. It uses a SQLite database for its data; the path
 is counter.sqlite.
 
-It's accessible on port 9776.
+It's accessible on configured port if not cofigured it will default to 9776.
 
 The counter responds to three possible paths:
 
@@ -25,6 +25,7 @@ Use environment variables to configure this.
 * `COUNTER_BG_COLOR`: The hex color for the background. Defaults to `"#000000"`.
 * `COUNTER_FONT_COLOR`: The hex color for the font. Defaults to `"#FFFFFF"`.
 * `COUNTER_LOG_LEVEL`: The log level to use. You can set it to `debug`, otherwise it uses `info`.
+* `COUNTER_PORT`: The port for the web counter. Defaults to `9776`.
 
 ## Running in Docker
 
