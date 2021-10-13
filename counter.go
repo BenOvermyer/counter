@@ -54,12 +54,12 @@ func initialize() {
 
 	fontPath := os.Getenv("COUNTER_FONT_DIR")
 	if fontPath == "" {
-		fontPath = "./"
+		fontPath = "./fonts/"
 	}
 
 	fontFace := os.Getenv("COUNTER_FONT_FILE")
 	if fontFace == "" {
-		fontFace = "Berylium.ttf"
+		fontFace = "FiraCode.ttf"
 	}
 
 	fontPath += fontFace
