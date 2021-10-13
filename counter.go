@@ -97,7 +97,7 @@ func initialize() {
 		imageWidth:      float64(imageWidth),
 		imageHeight:     float64(imageHeight),
 		logLevel:        logLevel,
-		port:			 float64(port)
+		port:	         float64(port)
 	}
 }
 
