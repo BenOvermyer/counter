@@ -3,7 +3,7 @@
 This is a simple web counter written in Go. It uses a SQLite database for its data; the path
 is counter.sqlite.
 
-It's accessible on configured port if not cofigured it will default to 9776.
+It's accessible on configured port if not cofigured then it will be accessible on default port 9776.
 
 The counter responds to three possible paths:
 
