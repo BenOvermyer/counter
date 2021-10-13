@@ -83,6 +83,11 @@ func initialize() {
 	if logLevel == "" {
 		logLevel = "info"
 	}
+	
+	port, err := strconv.Atoi(os.Getenv("COUNTER_PORT"))
+	if err != nil || port == 0 {
+		port = 9776
+	}
 
 	config = Config{
 		backgroundColor: backgroundColor,
@@ -92,6 +97,7 @@ func initialize() {
 		imageWidth:      float64(imageWidth),
 		imageHeight:     float64(imageHeight),
 		logLevel:        logLevel,
+		port:	         float64(port)
 	}
 }
 
@@ -124,8 +130,8 @@ func main() {
 	r.Get("/count", handleGetCountText)
 	r.Get("/count/counter.jpg", handleCountImage)
 
-	log.Info("listening on port 9776")
-	err := http.ListenAndServe(":9776", r)
+	log.Info("listening on port",port)
+	err := http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal("failed to listen:", err)
 	}
