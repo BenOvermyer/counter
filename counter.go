@@ -23,6 +23,7 @@ type Config struct {
 	imageWidth      float64
 	imageHeight     float64
 	logLevel        string
+	port            string
 }
 
 var config Config
@@ -54,12 +55,12 @@ func initialize() {
 
 	fontPath := os.Getenv("COUNTER_FONT_DIR")
 	if fontPath == "" {
-		fontPath = "./"
+		fontPath = "./fonts/"
 	}
 
 	fontFace := os.Getenv("COUNTER_FONT_FILE")
 	if fontFace == "" {
-		fontFace = "Berylium.ttf"
+		fontFace = "FiraCode.ttf"
 	}
 
 	fontPath += fontFace
@@ -84,6 +85,11 @@ func initialize() {
 		logLevel = "info"
 	}
 
+	port := os.Getenv("COUNTER_PORT")
+	if port == "" {
+		port = "9776"
+	}
+
 	config = Config{
 		backgroundColor: backgroundColor,
 		fontColor:       fontColor,
@@ -92,6 +98,7 @@ func initialize() {
 		imageWidth:      float64(imageWidth),
 		imageHeight:     float64(imageHeight),
 		logLevel:        logLevel,
+		port:            port,
 	}
 }
 
@@ -124,8 +131,8 @@ func main() {
 	r.Get("/count", handleGetCountText)
 	r.Get("/count/counter.jpg", handleCountImage)
 
-	log.Info("listening on port 9776")
-	err := http.ListenAndServe(":9776", r)
+	log.Info("listening on port: ", config.port)
+	err := http.ListenAndServe(":"+config.port, r)
 	if err != nil {
 		log.Fatal("failed to listen:", err)
 	}
