@@ -23,6 +23,7 @@ type Config struct {
 	imageWidth      float64
 	imageHeight     float64
 	logLevel        string
+	port            string
 }
 
 var config Config
@@ -83,10 +84,10 @@ func initialize() {
 	if logLevel == "" {
 		logLevel = "info"
 	}
-	
-	port, err := strconv.Atoi(os.Getenv("COUNTER_PORT"))
-	if err != nil || port == 0 {
-		port = 9776
+
+	port := os.Getenv("COUNTER_PORT")
+	if port == "" {
+		port = "9776"
 	}
 
 	config = Config{
@@ -97,7 +98,7 @@ func initialize() {
 		imageWidth:      float64(imageWidth),
 		imageHeight:     float64(imageHeight),
 		logLevel:        logLevel,
-		port:	         float64(port)
+		port:            port,
 	}
 }
 
@@ -130,8 +131,8 @@ func main() {
 	r.Get("/count", handleGetCountText)
 	r.Get("/count/counter.jpg", handleCountImage)
 
-	log.Info("listening on port",port)
-	err := http.ListenAndServe(port, r)
+	log.Info("listening on port: ", config.port)
+	err := http.ListenAndServe(":"+config.port, r)
 	if err != nil {
 		log.Fatal("failed to listen:", err)
 	}
