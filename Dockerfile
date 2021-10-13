@@ -3,7 +3,7 @@ FROM golang:1.17 AS build-env
 WORKDIR /go/src/app
 COPY . .
 RUN go get -d -v ./...
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/counter
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /go/bin/counter
 
 # final stage
 FROM scratch
